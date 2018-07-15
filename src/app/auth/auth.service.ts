@@ -1,10 +1,10 @@
-import { SetUserAction } from './auth.actions';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 
 import { Store } from '@ngrx/store';
 import { AppState } from '../app.reducer';
+import { SetUserAction, UnsetUserAction } from './auth.actions';
 import { ActivarLoadingAction, DesactivarLoadingAction } from '../shared/ui.actions';
 
 import Swal from 'sweetalert2';
@@ -21,6 +21,7 @@ import { Subscription } from 'rxjs';
 export class AuthService {
 
   userSubscription: Subscription = new Subscription();
+  usuario: User;
 
   constructor( private afAuth: AngularFireAuth,
                private router: Router,
@@ -36,9 +37,10 @@ export class AuthService {
 
               const newUser = new User( usuarioObj );
               this.store.dispatch( new SetUserAction( newUser ) );
-
+              this.usuario = newUser;
             });
       } else {
+        this.usuario = null;
         this.userSubscription.unsubscribe();
       }
 
@@ -91,8 +93,9 @@ export class AuthService {
   }
 
   logout() {
-    this.router.navigate(['/login']);
     this.afAuth.auth.signOut();
+    this.store.dispatch( new UnsetUserAction() );
+    this.router.navigate(['/login']);
   }
 
   isAuth() {
@@ -107,6 +110,10 @@ export class AuthService {
             return  fbUser != null;
           })
         );
+  }
+
+  getUsuario() {
+    return { ...this.usuario };
   }
 
 }
